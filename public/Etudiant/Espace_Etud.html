@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etudiant</title>
+</head>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<script src="/socket.io/socket.io.js" ></script>
+
+
+<body>
+    
+    <h1> Espace - Etudiant </h1>
+
+    <p> Salut  <span id="name"></span> , tu es bien connecté a ton espace utilisateur <br>
+        près pour faire une projection 
+    </p>
+
+    <button id="btn">Envoyer une demande</button>
+
+    <script>
+
+        const myPeer = new Peer(undefined, {
+            host: '/',
+            port: 9000,
+            path: '/peerjs'
+          });
+        const Socket = io()
+          
+
+        myPeer.on('open' , (id) => {
+
+            
+            document.querySelector("#btn").addEventListener('click', function(){
+
+                const dataEtud = {name: nameEtud , PeerId: id , Soso: Socket.id}
+                Socket.emit('Demande', (dataEtud))
+
+                console.log("Demande effectuer")
+                console.log(`information sur la demande : nom -> ${dataEtud.name}   identifiant peer -> ${dataEtud.PeerId} identifiant socket -> ${dataEtud.Soso}`   )
+            })
+            
+
+
+            Socket.on('RpAdmis' , peerid => {
+
+                navigator.mediaDevices.getDisplayMedia({ video: true })
+                .then((stream) => {
+                
+                    const call = myPeer.call(peerid, stream);
+
+                    }).catch((error) => {
+                        console.error("Erreur lors de la capture d'écran :", error);
+                        });
+                
+            })
+        })
+
+        
+        const nameEtud = prompt("Entrez votre nom")
+        const name = document.querySelector("#name")
+    
+     
+        
+        
+        name.innerHTML = nameEtud
+    
+    </script>
+</body>
+</html>

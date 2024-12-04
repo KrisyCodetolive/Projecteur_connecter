@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../Connexion/connexion.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <title>Connexion</title>
+    
+    
+</head>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+    const Socket = io()
+    
+
+</script>
+<body>
+
+    <!-- background-page -->
+    <div class="content1-Bg">
+        <div class="Bg bg1"></div>
+        <div class="Bg bg2"></div>
+    </div>
+
+    <div class="content2-Bg">
+        <div class="Bg bg3"></div>
+        <div class="Bg bg4"></div>
+    </div>
+    <!-- background-page -->
+
+    <!-- Texte-content -->
+    
+    <div class="Texte-content">
+
+        <div class="header">
+
+            <h1 class="bvn">Bienvenue</h1> 
+            <p class="texte">vous êtes bien connecté au serveur 
+                identifier vous pour accéder à votre espace utilisateur</p>   
+        </div>
+
+        <div class="field">
+
+            <button class="btn">
+                <h5>s'identifier</h5>
+                <img src="../Connexion/Arrow12.svg" width="16px"  alt="">
+            </button>
+
+
+            <form action="#" class="connexion  prio">
+                
+                <div class="nom ">
+                    <h4 id="h4" >Nom</h4>
+                    <input type="text" id="Name" placeholder="johaquime" class="input">
+                </div>
+
+                <div class="qui">
+                    <h4 >Qui êtes-vous ?</h4>
+                    <!-- <input type="text" id="Profession" placeholder="Administrateur" class="input"> -->
+
+                    <select class="input select" name="choix" style="appearance: none;">
+                        <option value="option1">Administrateur</option>
+                        <option value="option2">Etudiant</option>
+                        
+                      </select>
+                      
+                </div>
+
+            </form>
+            <button class="btn btn1">
+                <h5>soumettre</h5>
+                <img src="../Connexion/Arrow12.svg" width="16px"  alt="">
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Texte-content -->
+
+   <script src="../Connexion/connexion.js"></script>
+</body>
+</html>
