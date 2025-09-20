@@ -19,13 +19,6 @@ const options = {
 const server = https.createServer(options, app);
 const io = socketIo(server);
 
-const peerServer = PeerServer({
-    port: 9000,
-    path: '/peerjs',
-    ssl: options,
-    allow_discovery: true, 
-});
-
 // Middleware pour les en-têtes CORS
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines
@@ -35,10 +28,21 @@ app.use((req, res, next) => {
 });
 
 
+const peerServer = PeerServer({
+    port: 9000,
+    path: '/peerjs',
+    ssl: options,
+    allow_discovery: true, 
+});
+
+
+
+
 // Configuration des routes
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
+    //res.sendFile(__dirname + '/public/QCM_TEST/index.html');
     res.sendFile(__dirname + '/public/Connexion/Connexion.html');
 });
 
@@ -63,14 +67,12 @@ io.on('connection', (socket) => {
    
     socket.on('Demande' , (Data) => {
 
-        io.emit('Request' , (Data))
+        socket.broadcast.emit('Request' , (Data))
       
     })
 
     socket.on('Reponse' , (id) => {
 
-        //console.log('rp reçu par id', id)
-        //io.to(Soso).emit('RpAdmis' , id)
         io.emit('RpAdmis' , (id))
        
     })

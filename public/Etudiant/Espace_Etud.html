@@ -22,6 +22,10 @@
     <button id="btn">Envoyer une demande</button>
 
     <script>
+        
+        const nameEtud = prompt("Entrez votre nom")
+        const name = document.querySelector("#name")
+        name.innerHTML = nameEtud
 
         const myPeer = new Peer(undefined, {
             host: '/',
@@ -60,13 +64,7 @@
         })
 
         
-        const nameEtud = prompt("Entrez votre nom")
-        const name = document.querySelector("#name")
-    
-     
-        
-        
-        name.innerHTML = nameEtud
+      
     
     </script>
 </body>

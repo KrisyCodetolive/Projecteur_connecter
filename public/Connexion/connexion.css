@@ -51,12 +51,12 @@ body{
 
 .bg1 , .bg4 {
     background-color: rgba(249, 63, 180, 0.78);
-    filter: blur(17rem);
+    filter: blur(100rem);
     
 }
 .bg2 , .bg3 {
     background-color: rgba(72, 50, 191, 0.78);
-    filter: blur(17rem);
+    filter: blur(100rem);
 }
 
 .bg3{
@@ -67,16 +67,16 @@ body{
 .bg2 {
     transform: translate(100px , -250px);
     /* transition: all ease-in-out ; */
-    animation: particule-anim2 2s  infinite ease-in-out;
+    animation: particule-anim2 10s  infinite ease-in-out;
     
 }
 .bg1{
     transform: translate(-100px , -105px);
-    animation: particule-anim5 7s  infinite ease-in-out;
+    animation: particule-anim5 10s  infinite ease-in-out;
 }
 .bg4{
     transform: translate(100px , 250px);
-    animation: particule-anim4 2s  infinite ease-in-out;
+    animation: particule-anim4 5s  infinite ease-in-out;
 }
 /* background-page */
 
@@ -99,6 +99,7 @@ body{
 .header , .field{
     width: 100%;
     height: 50%;
+    
     /* border: 2px solid rgb(138, 55, 55); */
 }
 
