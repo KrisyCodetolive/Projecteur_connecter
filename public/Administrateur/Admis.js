@@ -1,92 +1,121 @@
-const Socket = io()
+/* ======================
+   SOCKET.IO
+====================== */
+const Socket = io();
 
-const myPeer = new Peer(1230, {
-    host: '/',
-    port: 9000,
-    path: '/peerjs'
-  });
+/* ======================
+   PEERJS
+====================== */
+const myPeer = new Peer({
+    host: location.hostname,   // 🔥 important pour réseau
+    port: location.port || 3000,
+    path: '/peerjs',
+    secure: location.protocol === 'https:'
+});
 
-  
+/* ======================
+   PEER CONNECTED
+====================== */
+myPeer.on('open', (id) => {
+    console.log('Peer connecté avec ID :', id);
 
-myPeer.on('open' , (id) => {
+    /* ======================
+       RÉCEPTION DES DEMANDES
+    ====================== */
+    Socket.on('Request', (data) => {
+        console.log("i'm here ")
+        const li = document.createElement('li');
 
-    //console.log(id)
-    
+        li.innerHTML = `
+            <p>
+              <strong>${data.name}</strong> souhaite partager son écran
+              <br>Peer ID : ${data.PeerId}
+            </p>
+            <button class="accept">Accepter</button>
+            <button class="reject">Refuser</button>
+        `;
 
+        document.querySelector('#list-Etud').appendChild(li);
 
-    Socket.on('Request' , (Data) => {
-
-    
-        const Etud = document.createElement('li')
-        Etud.innerHTML = `<p>${Data.name} souhaite partager son écran (Peer ID : ${Data.PeerId})</p>
-                <button id= "btn1">Accepter</button>
-                 <button id= "btn2">Réfuser</button>`
-
-        document.querySelector("#list-Etud").appendChild(Etud)
-        document.querySelector("#btn1").addEventListener('click', function(){
-
-            Socket.emit('Reponse' , (myPeer.id))
-
-            console.log('reponse envoyer:', myPeer.id ,'a: ', Data.Soso )
-        })
-    })
-
-
-    myPeer.on('call', (call) => {
-
-       
-        //window.location.assign("test");
-        //window.location.href = "test";
-
-        console.log('Appel reçu de Peer A');
-      
-        // Répondre à l'appel sans envoyer de flux (juste recevoir)
-        call.answer();
-      
-        // Écouter le flux entrant de Peer A
-        call.on('stream', (remoteStream) => {
-          console.log('Flux reçu de Peer A');
-      
-          // Afficher le flux distant dans une balise <video>
-          const remoteVideo = document.getElementById('remoteVideo');
-          if (remoteVideo) {
-            remoteVideo.srcObject = remoteStream;
-            remoteVideo.play();
-          }
+        /* ======================
+           ACCEPTATION
+        ====================== */
+        li.querySelector('.accept').addEventListener('click', () => {
+            Socket.emit('Reponse', id); // ⚠️ envoyer TON peer ID
+            console.log('Demande acceptée → Peer ID envoyé:', id);
         });
-      
-        // Gérer les erreurs éventuelles
-        call.on('error', (err) => {
-          console.error('Erreur lors de l\'appel PeerJS :', err);
+
+        /* ======================
+           REFUS (OPTIONNEL)
+        ====================== */
+        li.querySelector('.reject').addEventListener('click', () => {
+            li.remove();
+            console.log('Demande refusée');
         });
-      
-        // Gérer la fin de l'appel
-        // call.on('close', () => {
-        //   console.log('Appel terminé.');
-        // });
-      });
+    });
+});
 
-      
-    
-})
+/* ======================
+   RÉCEPTION DU STREAM
+====================== */
+myPeer.on('call', (call) => {
 
+    console.log('📞 Appel entrant de :', call.peer);
 
+    // L'admin ne partage rien
+    call.answer();
 
+    call.on('stream', (remoteStream) => {
 
+        const video = document.getElementById('remoteVideo');
 
+        if (!video) {
+            console.error('❌ <video id="remoteVideo"> manquant');
+            return;
+        }
 
+        video.srcObject = remoteStream;
+        video.playsInline = true;
+        video.autoplay = true;
+    });
 
+    call.on('error', (err) => {
+        console.error('❌ Erreur PeerJS :', err);
+    });
+});
 
-function addEtud(tbl) {
+const peerStatus = document.getElementById('peer-status');
 
-    
+/* ======================
+   PEERJS STATUS
+====================== */
 
-    tbl.forEach(elt =>{
-        const Etud = document.createElement('li')
-        Etud.innerHTML = `<p>${data.name} souhaite partager son écran (Peer ID : ${data.peerId})</p>
-                <button>Accepter</button>`
+// Connexion OK
+myPeer.on('open', (id) => {
+    console.log('✅ Peer connecté :', id);
+    peerStatus.textContent = 'Connecté';
+    peerStatus.style.color = 'green';
+});
 
-        listEtud.appendChild(Etud)
-    })
-    
-}
+// Erreur PeerJS
+myPeer.on('error', (err) => {
+    console.error('❌ Erreur PeerJS :', err);
+    peerStatus.textContent = 'Erreur';
+    peerStatus.style.color = 'red';
+});
+
+// Connexion fermée
+myPeer.on('close', () => {
+    console.warn('⚠️ Connexion Peer fermée');
+    peerStatus.textContent = 'Déconnecté';
+    peerStatus.style.color = 'gray';
+});
+
+// Tentative de reconnexion
+myPeer.on('disconnected', () => {
+    console.warn('🔁 Peer déconnecté, tentative de reconnexion...');
+    peerStatus.textContent = 'Reconnexion...';
+    peerStatus.style.color = 'orange';
+    myPeer.reconnect();
+});
+

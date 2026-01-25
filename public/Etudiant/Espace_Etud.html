@@ -1,71 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Etudiant</title>
+    <title>Étudiant</title>
 </head>
-
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
-<script src="/socket.io/socket.io.js" ></script>
-
-
 <body>
-    
-    <h1> Espace - Etudiant </h1>
+    <h1>Espace – Étudiant</h1>
 
-    <p> Salut  <span id="name"></span> , tu es bien connecté a ton espace utilisateur <br>
-        près pour faire une projection 
+    <p>
+        Salut <strong><span id="name"></span></strong>, tu es connecté à ton espace utilisateur.
     </p>
 
-    <button id="btn">Envoyer une demande</button>
+    <p>
+        Statut Peer : <span id="peer-status" style="color: orange;">Connexion…</span>
+    </p>
+
+    <button id="btn">Envoyer une demande de diffusion</button>
+
+    <!-- Librairies -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 
     <script>
-        
-        const nameEtud = prompt("Entrez votre nom")
-        const name = document.querySelector("#name")
-        name.innerHTML = nameEtud
+        const nameEtud = prompt("Entrez votre nom") || "Étudiant";
+        document.getElementById("name").textContent = nameEtud;
 
+        const peerStatus = document.getElementById('peer-status');
+
+        // Socket.IO
+        const Socket = io();
+
+        // PeerJS
         const myPeer = new Peer(undefined, {
-            host: '/',
-            port: 9000,
-            path: '/peerjs'
-          });
-        const Socket = io()
-          
+            host: location.hostname,
+            port: location.port || 3001,
+            path: '/peerjs',
+            secure: location.protocol === 'https:'
+        });
 
-        myPeer.on('open' , (id) => {
+        // =========================
+        // Status PeerJS
+        // =========================
+        myPeer.on('open', (id) => {
+            console.log('✅ Peer connecté :', id);
+            peerStatus.textContent = 'Connecté';
+            peerStatus.style.color = 'green';
 
-            
-            document.querySelector("#btn").addEventListener('click', function(){
+            // Envoyer une demande à l'admin
+            document.getElementById("btn").addEventListener('click', () => {
+                const demande = {
+                    name: nameEtud,
+                    PeerId: id,
+                    SocketId: Socket.id
+                };
+                Socket.emit('Demande', demande);
+                console.log('📨 Demande envoyée :', demande);
+            });
+        });
 
-                const dataEtud = {name: nameEtud , PeerId: id , Soso: Socket.id}
-                Socket.emit('Demande', (dataEtud))
+        myPeer.on('error', (err) => {
+            console.error('❌ Erreur PeerJS :', err);
+            peerStatus.textContent = 'Erreur';
+            peerStatus.style.color = 'red';
+        });
 
-                console.log("Demande effectuer")
-                console.log(`information sur la demande : nom -> ${dataEtud.name}   identifiant peer -> ${dataEtud.PeerId} identifiant socket -> ${dataEtud.Soso}`   )
-            })
-            
+        myPeer.on('disconnected', () => {
+            console.warn('🔁 Peer déconnecté, reconnexion…');
+            peerStatus.textContent = 'Reconnexion…';
+            peerStatus.style.color = 'orange';
+            myPeer.reconnect();
+        });
 
+        myPeer.on('close', () => {
+            console.warn('⚠️ Connexion Peer fermée');
+            peerStatus.textContent = 'Déconnecté';
+            peerStatus.style.color = 'gray';
+        });
 
-            Socket.on('RpAdmis' , peerid => {
+        // =========================
+        // Réception de l'autorisation de l'admin
+        // =========================
+        Socket.on('RpAdmis', (adminPeerId) => {
+            console.log('✅ Autorisation reçue de l’admin :', adminPeerId);
 
-                navigator.mediaDevices.getDisplayMedia({ video: true })
+            navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
                 .then((stream) => {
-                
-                    const call = myPeer.call(peerid, stream);
+                    console.log('🎥 Capture écran démarrée');
 
-                    }).catch((error) => {
-                        console.error("Erreur lors de la capture d'écran :", error);
-                        });
-                
-            })
-        })
+                    // Envoi du stream au Peer admin
+                    const call = myPeer.call(adminPeerId, stream);
 
-        
-      
-    
+                    call.on('error', (err) => {
+                        console.error('❌ Erreur lors de l’appel PeerJS :', err);
+                    });
+
+                })
+                .catch((error) => {
+                    console.error('❌ Erreur lors de la capture écran :', error);
+                });
+        });
     </script>
 </body>
 </html>

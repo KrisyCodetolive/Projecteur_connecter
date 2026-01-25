@@ -1,48 +1,62 @@
-// const { Socket } = require('dgram');
-const express = require('express'); 
+const express = require('express');
 const fs = require('fs');
 const https = require('https');
-const socketIo = require('socket.io');
-const { PeerServer } = require('peer');
+const { Server } = require('socket.io');
+const { ExpressPeerServer } = require('peer');
 
 const app = express();
 
-
-
-// Options pour HTTPS avec les bons fichiers
+/* =========================
+   HTTPS
+========================= */
 const options = {
     key: fs.readFileSync('key.pem'),
-    cert: fs.readFileSync('cert.pem') // Assurez-vous que c'est bien le certificat, pas .csr
+    cert: fs.readFileSync('cert.pem')
 };
 
-// Crée un serveur HTTPS sécurisé
 const server = https.createServer(options, app);
-const io = socketIo(server);
 
-// Middleware pour les en-têtes CORS
+/* =========================
+   SOCKET.IO
+========================= */
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
+
+/* =========================
+   CORS HTTP (IMPORTANT)
+========================= */
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Autoriser ces méthodes
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Autoriser ces en-têtes
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
     next();
 });
 
-
-const peerServer = PeerServer({
-    port: 9000,
-    path: '/peerjs',
-    ssl: options,
-    allow_discovery: true, 
+/* =========================
+   PEERJS SERVER
+========================= */
+const peerServer = ExpressPeerServer(server, {
+    path: '/',
+    allow_discovery: false
 });
 
+// 👉 MONTE UNE SEULE FOIS
+app.use('/peerjs', peerServer);
 
-
-
-// Configuration des routes
+/* =========================
+   STATIC FILES & ROUTES
+========================= */
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-    //res.sendFile(__dirname + '/public/QCM_TEST/index.html');
     res.sendFile(__dirname + '/public/Connexion/Connexion.html');
 });
 
@@ -58,46 +72,30 @@ app.get('/Etudiant', (req, res) => {
     res.sendFile(__dirname + '/public/Etudiant/Espace_Etud.html');
 });
 
-
-
-// Configuration de Socket.io pour les connexions en temps réel
+/* =========================
+   SOCKET LOGIC
+========================= */
 io.on('connection', (socket) => {
 
-    //création de Room et transmission de l'ID en broadcast 
-   
-    socket.on('Demande' , (Data) => {
+    console.log('Utilisateur connecté :', socket.id);
 
-        socket.broadcast.emit('Request' , (Data))
-      
-    })
+    socket.on('Demande', (data) => {
+        socket.broadcast.emit('Request', data);
+        console.log("demande distribuer:", data)
+    });
 
-    socket.on('Reponse' , (id) => {
+    socket.on('Reponse', (peerId) => {
+        io.emit('RpAdmis', peerId);
+    });
 
-        io.emit('RpAdmis' , (id))
-       
-    })
-
-
-    // socket.on('Reponse' , (id , Soso) => {
-
-    //     console.log('rp reçu par id', id, Soso)
-    //     io.to(Soso).emit('RpAdmis' , id)
-    //     io.emit('RpAdmis' , (id))
-       
-    // })
-    
-  
-
-    //déconnection
-    socket.on('disconnect' , () => {
-
-        console.log('un utilisateur c\'est déconnecté');
-    })
+    socket.on('disconnect', () => {
+        console.log('Utilisateur déconnecté :', socket.id);
+    });
 });
 
-
-
-// Lancement du serveur HTTPS
-server.listen(3000, '0.0.0.0', () => {
-    console.log('serveur HTTPS en marche sur le port 3000');
+/* =========================
+   START SERVER
+========================= */
+server.listen(3001, '0.0.0.0', () => {
+    console.log('✅ Serveur HTTPS en marche sur https://localhost:3000');
 });
